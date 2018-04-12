@@ -1,0 +1,621 @@
+{% extends 'main/base.html' %}
+{% load static %}
+{% block title %}Othello Game{% endblock %}
+{% block head %}
+<style>
+BODY {
+  font-family: 'Open Sans', sans-serif;
+  color: #FFFFFF;
+  background-color:#000000;
+  text-align: center;
+}
+H1 {
+  font-size: 24px;
+}
+
+#colorTurn {
+  font-size: 18px;
+}
+
+#grid {
+  margin: 20px auto;
+  display: table;
+  width: 600px;
+  height: 600px;
+  padding: 0px;
+  border-collapse: collapse;
+  background: #00838F;
+  border: 1px solid #006064;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  -moz-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+   border-spacing: 5px 5px;
+}
+
+.row {
+  display: table-row;
+}
+
+.cell {
+  display: table-cell;
+  width: 75px;
+  height: 50px;
+  border: 1px solid #000000;
+  padding: 4px;
+}
+
+.disc {
+  width: 45px;
+    background: #006064;
+    height: 45px;
+  -webkit-border-radius: 50%;
+  -moz-border-radius: 50%;
+  border-radius: 50%;
+  margin: 2.5px;
+}
+</style>
+
+
+<script type="text/javascript">
+
+
+var turn={{ game.turn|safe }};
+var b = {{ game.gameboard|safe }};
+var player= {{ game.player|safe }};
+var timer = {{ game.timer|safe }};
+var black = 2;
+var white = 2;
+var endGame = {{ game.gameEnd|safe }};
+var gameend = 0;
+var resultdeclared = 0;
+var grid = [
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0]
+];
+
+setInterval(function() {
+    var URL = "{% url 'main:refresh' %}";
+    var data= {'token': {{ game.token }}};
+
+       $.get(URL,data,function(response){
+            b=response['gameboard'];
+            turn=response['turn'];
+            timer=response['timer'];
+            endGame = response['gameEnd'];
+            if (timer==61)
+             timer=60;
+            if (player==turn) {
+                document.getElementById("timeropponent").innerHTML = "OPP: 60s";
+                document.getElementById("timerown").innerHTML = "YOUR: "+timer+"s";
+            } else {
+                document.getElementById("timeropponent").innerHTML = "OPP: "+timer+"s";
+                document.getElementById("timerown").innerHTML = "YOUR: 60s";
+            }
+            boardtogrid();
+            refreshGrid();
+
+            if(gameEnd()==0 && endGame==1 && resultdeclared==0){
+           //     console.log("YESSS");
+                document.getElementById("timeropponent").innerHTML = "OPP: 60s";
+                document.getElementById("colorTurn").innerHTML = "";
+                document.getElementById("timerown").innerHTML = "YOUR: 60s";
+                document.getElementById("winner").innerText = "Winner : "+(white>black?"white":"black");
+                gameend=1;
+                resultdeclared=1;
+                updateBoard();
+                if (white>black && player==1)
+                    alert("Congratulations!!  You Won");
+                else if (black>white && player==2)
+                    alert("Congratulations!!  You Won");
+                else if (white==black)
+                    alert("Draw!!!");
+                else alert("Sorry!! You Lost");
+            }
+
+            if (player==turn){
+                if (gameEnd()==0){
+                    gameend=1;
+                    updateBoard();
+                }
+            }
+/*
+            if(response['gameEnd']==1 && gameend==1){
+                document.getElementById("timeropponent").innerHTML = "OPPONENT: 60s";
+                      document.getElementById("colorTurn").innerHTML = "";
+                document.getElementById("timerown").innerHTML = "YOUR: 60s";
+                document.getElementById("winner").innerText = "Winner : "+(white>black?"white":"black");
+            }
+            */
+        });
+    }, 800);
+
+function boardtogrid() {
+    var i=-1;
+    for(var k =0;k<64;k++){
+        if (k%8==0)
+            i++;
+        if (b.charAt(k)=='0')
+            grid[i][k%8]=0;
+        else if (b.charAt(k)=='1')
+            grid[i][k%8]=1;
+        else if(b.charAt(k)=='2')
+            grid[i][k%8]=2;
+    }
+}
+
+function gridtoboard() {
+    var board = '';
+    for (var row = 0; row < 8; row++) {
+        for (var col = 0; col < 8; col++) {
+            if (grid[row][col] == 0) {
+                board += '0'
+            } else if (grid[row][col] == 1) { //1 for white
+                board += '1'
+            } else if (grid[row][col] == 2) { //2 for black
+                board += '2'
+            }
+        }
+    }
+    return board;
+}
+
+function selectCell(row,col) {
+    //A function used to add a disc
+//This function is incomplete
+//It should check that the player is allowed to place their disc on the selected cell.
+console.log("PLayer="+player);
+console.log("GRID="+grid);
+console.log("TURN="+turn)
+  if (turn==player && valid(row,col)) {
+      if ((player == 1) && (grid[row][col] == 0)) {
+          grid[row][col] = 1;
+          document.getElementById("colorTurn").innerHTML = "Black Turn";
+      } else if ((player == 2) && (grid[row][col] == 0)) {
+          grid[row][col] = 2;
+          document.getElementById("colorTurn").innerHTML = "White Turn";
+      }
+
+      //Complete the code here to flip existing disc following the rules of the game
+      gameend=0;
+      //Then calculate and display the score by counting the number of white discs and the number of black discs (Note: You can do this in the refreshGrid() function)
+          updateBoard();
+          refreshGrid();
+
+  }
+}
+//---
+//---
+//---
+
+//game end condition
+
+function gameEnd() {
+    var check = 0;
+    if(completeboardsamecolor()==0)
+        return 0;
+    for (var i=0;i<8;i++){
+        for(var j=0;j<8;j++){
+            if (grid[i][j]==0){
+                if(find(i,j)==1) {
+                    return 1;
+                }
+            }
+        }
+    }
+    return check;
+}
+
+function find(row,col) {
+    var valid = 0;
+    for (var i=row+1;i<8;i++){
+        if (grid[i][col]==player) {
+            return 1;
+        }
+        if (grid[i][col]==0)
+            break;
+    }
+
+    for (var i=row-1;i>=0;i--){
+        if (grid[i][col]==player) {
+            return 1;
+        }
+        if(grid[i][col]==0)
+            break;
+    }
+
+    for (var i=col+1;i<8;i++){
+        if (grid[row][i]==player) {
+          return 1;
+        }
+        if(grid[row][i]==0)
+            break;
+    }
+
+
+    for (var i=col-1;i>=0;i--){
+        if (grid[row][i]==player) {
+       return 1;
+        }
+        if(grid[row][i]==0)
+            break;
+    }
+
+    var k=row+1,l=col+1;
+    while (k<8 && l<8){
+        if (grid[k][l]==player){
+        return 1;
+        }
+        if(grid[k][l]==0)
+            break;
+        k++;l++;
+    }
+
+    k=row-1,l=col-1;
+    while (k>=0 && l>=0){
+        if (grid[k][l]==player){
+        return 1;
+        }
+        if(grid[k][l]==0)
+            break;
+        k--;l--;
+    }
+    k=row+1,l=col-1;
+    while (k<8 && l>=0){
+        if (grid[k][l]==player){
+        return 1;
+        }
+        if(grid[k][l]==0)
+            break;
+        k++;l--;
+    }
+    k=row-1,l=col+1;
+    while (k>=0 && l<8){
+        if (grid[k][l]==player){
+       return 1;
+        }
+        if(grid[k][l]==0)
+            break;
+        k--;l++;
+    }
+    return valid;
+}
+
+function completeboardsamecolor() {
+    var k=0,l=0;
+    for (var i=0;i<8;i++){
+        for (var j=0;j<8;j++){
+            if(grid[i][j]==1){
+                k++;
+            }
+            else if(grid[i][j]==2)
+                l++;
+        }
+    }
+    if(k==0 || l==0)
+        return 0;
+    return 1;
+}
+
+function valid(row,col) {
+    var valid = 0;
+    var min=-1;
+    var newval = turn
+    var opposite = 0;
+    if (turn==1)
+        opposite=2;
+    else opposite=1;
+    if(completeboardsamecolor()==0)
+        return 0;
+    for (var i=row+1;i<8;i++){
+        if (grid[i][col]==turn) {
+            valid = 1;
+            min=i;
+            break;
+        }
+        if (grid[i][col]==0)
+            break;
+    }
+    for(var i=row+1;i<min;i++){
+        console.log(i);
+        grid[i][col]=newval;
+    }
+
+    min=10;
+
+    for (var i=row-1;i>=0;i--){
+        if (grid[i][col]==turn) {
+            valid = 1;
+            min=i;
+            break;
+        }
+        if(grid[i][col]==0)
+            break;
+    }
+
+     for(var i=row-1;i>min;i--){
+       console.log(i);
+        grid[i][col]=newval;
+    }
+    min=-1;
+
+    for (var i=col+1;i<8;i++){
+        if (grid[row][i]==turn) {
+            valid = 1;
+            min=i;
+            break;
+        }
+        if(grid[row][i]==0)
+            break;
+    }
+
+    for(var i=col+1;i<min;i++){
+        console.log(i);
+        grid[row][i]=newval;
+    }
+
+    min=10;
+
+    for (var i=col-1;i>=0;i--){
+        if (grid[row][i]==turn) {
+            valid = 1;
+            min=i;
+            break;
+        }
+        if(grid[row][i]==0)
+            break;
+    }
+
+    for(var i=col-1;i>min;i--){
+console.log(i);
+        grid[row][i]=newval;
+    }
+
+    var k=row+1,l=col+1;
+    var rmin=-1,colmin=-1;
+    while (k<8 && l<8){
+        if (grid[k][l]==turn){
+            valid=1;
+            rmin=k;colmin=l;
+            break;
+        }
+        if(grid[k][l]==0)
+            break;
+        k++;l++;
+    }
+
+    var m=row+1,n=col+1;
+    while (m<rmin && n<colmin){
+        console.log(m);console.log(n);
+        grid[m][n]=newval;
+        m++;n++;
+    }
+
+    m=row-1,n=col-1;
+    k=row-1,l=col-1;
+    rmin=10,colmin=10;
+    while (k>=0 && l>=0){
+        if (grid[k][l]==turn){
+            valid=1;
+            rmin=k;colmin=l;
+            break;
+        }
+        if(grid[k][l]==0)
+            break;
+        k--;l--;
+    }
+
+    while (m>rmin && n>colmin){
+        console.log(m);console.log(n);
+        grid[m][n]=newval;
+        m--;n--;
+    }
+
+
+    m=row+1,n=col-1;
+    rmin=-1,colmin=10;
+    k=row+1,l=col-1;
+    while (k<8 && l>=0){
+        if (grid[k][l]==turn){
+            valid=1;
+            rmin=k;colmin=l;
+            break;
+        }
+        if(grid[k][l]==0)
+            break;
+        k++;l--;
+    }
+
+    while (m<rmin && n>colmin){
+       console.log(m);console.log(n);
+
+        grid[m][n]=newval;
+        m++;n--;
+    }
+
+
+    m=row-1,n=col+1;
+    rmin=10,col=-1;
+    k=row-1,l=col+1;
+    console.log(m);
+    console.log(n);console.log(rmin);console.log(colmin);
+    while (k>=0 && l<8){
+        if (grid[k][l]==turn){
+            valid=1;
+            rmin=k;colmin=l;
+            break;
+        }
+        if(grid[k][l]==0)
+            break;
+        k--;l++;
+    }
+
+    while (m>rmin && n<colmin){
+        console.log(m);console.log(n);
+
+        grid[m][n]=newval;
+        m--;n++;
+    }
+
+    return valid;
+}
+
+function updateBoard() {
+    var toboard = gridtoboard();
+    var URL="{% url 'main:update_board' %}";
+    if (turn==2)
+        turn=1;
+    else turn=2;
+    var data={'token': {{ game.token }},'gameEnd':gameend, 'gameboard':toboard,'turn':turn,'csrfmiddlewaretoken':'{{ csrf_token }}' };
+    $.post(URL,data,function (response) {
+        console.log("success");
+    });
+}
+
+//A function used to refresh the Othello grid on screen
+function refreshGrid() {black=0;white=0;
+  for (var row = 0; row < 8; row++) {
+    for (var col = 0; col < 8; col++) {
+      if (grid[row][col]==0) {
+                document.getElementById("cell"+row+col).childNodes[0].style.backgroundColor="#129104";
+      } else if (grid[row][col]==1) { //1 for white
+          white=white+1;
+                document.getElementById("cell"+row+col).childNodes[0].style.backgroundColor="#FFFFFF";
+      } else if (grid[row][col]==2) { //2 for black
+          black=black+1;
+                document.getElementById("cell"+row+col).childNodes[0].style.backgroundColor="#000000";
+       }
+    }
+  }
+  document.getElementById("black").innerText = "Player Black : "+black;
+  document.getElementById("white").innerText = "Player White : "+white;
+}
+
+function resetGrid() {
+grid = [
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 1, 2, 0, 0, 0],
+  [0, 0, 0, 2, 1, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0]
+];
+}
+
+</script>
+{% endblock %}
+
+
+<body>
+{% block content %}
+<H1>OTHELLO Challenge</H1>
+<div id="colorTurn">Turn: {{ game.player }}</div>
+    <h2 id="winner"></h2>
+ <div class="container-fluid">
+ <div class="row">
+ <div class="col-lg-2">
+ <h3>Score</h3>
+     <h5 id="white">Player White: 2</h5>
+     <h5 id="black">Player Black: 2</h5>
+ </div>
+     <div class="col-lg-8">
+     <div id="grid">
+<div class="row">
+  <div class="cell" id="cell00" onclick="selectCell(0,0);"><div class="disc"></div></div>
+  <div class="cell" id="cell01" onclick="selectCell(0,1);"><div class="disc"></div></div>
+  <div class="cell" id="cell02" onclick="selectCell(0,2);"><div class="disc"></div></div>
+  <div class="cell" id="cell03" onclick="selectCell(0,3);"><div class="disc"></div></div>
+  <div class="cell" id="cell04" onclick="selectCell(0,4);"><div class="disc"></div></div>
+  <div class="cell" id="cell05" onclick="selectCell(0,5);"><div class="disc"></div></div>
+  <div class="cell" id="cell06" onclick="selectCell(0,6);"><div class="disc"></div></div>
+  <div class="cell" id="cell07" onclick="selectCell(0,7);"><div class="disc"></div></div>
+</div>
+<div class="row">
+  <div class="cell" id="cell10" onclick="selectCell(1,0);"><div class="disc"></div></div>
+  <div class="cell" id="cell11" onclick="selectCell(1,1);"><div class="disc"></div></div>
+  <div class="cell" id="cell12" onclick="selectCell(1,2);"><div class="disc"></div></div>
+  <div class="cell" id="cell13" onclick="selectCell(1,3);"><div class="disc"></div></div>
+  <div class="cell" id="cell14" onclick="selectCell(1,4);"><div class="disc"></div></div>
+  <div class="cell" id="cell15" onclick="selectCell(1,5);"><div class="disc"></div></div>
+  <div class="cell" id="cell16" onclick="selectCell(1,6);"><div class="disc"></div></div>
+  <div class="cell" id="cell17" onclick="selectCell(1,7);"><div class="disc"></div></div>
+</div>
+<div class="row">
+  <div class="cell" id="cell20" onclick="selectCell(2,0);"><div class="disc"></div></div>
+  <div class="cell" id="cell21" onclick="selectCell(2,1);"><div class="disc"></div></div>
+  <div class="cell" id="cell22" onclick="selectCell(2,2);"><div class="disc"></div></div>
+  <div class="cell" id="cell23" onclick="selectCell(2,3);"><div class="disc"></div></div>
+  <div class="cell" id="cell24" onclick="selectCell(2,4);"><div class="disc"></div></div>
+  <div class="cell" id="cell25" onclick="selectCell(2,5);"><div class="disc"></div></div>
+  <div class="cell" id="cell26" onclick="selectCell(2,6);"><div class="disc"></div></div>
+  <div class="cell" id="cell27" onclick="selectCell(2,7);"><div class="disc"></div></div>
+</div>
+<div class="row">
+  <div class="cell" id="cell30" onclick="selectCell(3,0);"><div class="disc"></div></div>
+  <div class="cell" id="cell31" onclick="selectCell(3,1);"><div class="disc"></div></div>
+  <div class="cell" id="cell32" onclick="selectCell(3,2);"><div class="disc"></div></div>
+  <div class="cell" id="cell33" onclick="selectCell(3,3);"><div class="disc"></div></div>
+  <div class="cell" id="cell34" onclick="selectCell(3,4);"><div class="disc"></div></div>
+  <div class="cell" id="cell35" onclick="selectCell(3,5);"><div class="disc"></div></div>
+  <div class="cell" id="cell36" onclick="selectCell(3,6);"><div class="disc"></div></div>
+  <div class="cell" id="cell37" onclick="selectCell(3,7);"><div class="disc"></div></div>
+</div>
+<div class="row">
+  <div class="cell" id="cell40" onclick="selectCell(4,0);"><div class="disc"></div></div>
+  <div class="cell" id="cell41" onclick="selectCell(4,1);"><div class="disc"></div></div>
+  <div class="cell" id="cell42" onclick="selectCell(4,2);"><div class="disc"></div></div>
+  <div class="cell" id="cell43" onclick="selectCell(4,3);"><div class="disc"></div></div>
+  <div class="cell" id="cell44" onclick="selectCell(4,4);"><div class="disc"></div></div>
+  <div class="cell" id="cell45" onclick="selectCell(4,5);"><div class="disc"></div></div>
+  <div class="cell" id="cell46" onclick="selectCell(4,6);"><div class="disc"></div></div>
+  <div class="cell" id="cell47" onclick="selectCell(4,7);"><div class="disc"></div></div>
+</div>
+<div class="row">
+  <div class="cell" id="cell50" onclick="selectCell(5,0);"><div class="disc"></div></div>
+  <div class="cell" id="cell51" onclick="selectCell(5,1);"><div class="disc"></div></div>
+  <div class="cell" id="cell52" onclick="selectCell(5,2);"><div class="disc"></div></div>
+  <div class="cell" id="cell53" onclick="selectCell(5,3);"><div class="disc"></div></div>
+  <div class="cell" id="cell54" onclick="selectCell(5,4);"><div class="disc"></div></div>
+  <div class="cell" id="cell55" onclick="selectCell(5,5);"><div class="disc"></div></div>
+  <div class="cell" id="cell56" onclick="selectCell(5,6);"><div class="disc"></div></div>
+  <div class="cell" id="cell57" onclick="selectCell(5,7);"><div class="disc"></div></div>
+</div>
+  <div class="row">
+  <div class="cell" id="cell60" onclick="selectCell(6,0);"><div class="disc"></div></div>
+  <div class="cell" id="cell61" onclick="selectCell(6,1);"><div class="disc"></div></div>
+  <div class="cell" id="cell62" onclick="selectCell(6,2);"><div class="disc"></div></div>
+  <div class="cell" id="cell63" onclick="selectCell(6,3);"><div class="disc"></div></div>
+  <div class="cell" id="cell64" onclick="selectCell(6,4);"><div class="disc"></div></div>
+  <div class="cell" id="cell65" onclick="selectCell(6,5);"><div class="disc"></div></div>
+  <div class="cell" id="cell66" onclick="selectCell(6,6);"><div class="disc"></div></div>
+  <div class="cell" id="cell67" onclick="selectCell(6,7);"><div class="disc"></div></div>
+</div>
+  <div class="row">
+  <div class="cell" id="cell70" onclick="selectCell(7,0);"><div class="disc"></div></div>
+  <div class="cell" id="cell71" onclick="selectCell(7,1);"><div class="disc"></div></div>
+  <div class="cell" id="cell72" onclick="selectCell(7,2);"><div class="disc"></div></div>
+  <div class="cell" id="cell73" onclick="selectCell(7,3);"><div class="disc"></div></div>
+  <div class="cell" id="cell74" onclick="selectCell(7,4);"><div class="disc"></div></div>
+  <div class="cell" id="cell75" onclick="selectCell(7,5);"><div class="disc"></div></div>
+  <div class="cell" id="cell76" onclick="selectCell(7,6);"><div class="disc"></div></div>
+  <div class="cell" id="cell77" onclick="selectCell(7,7);"><div class="disc"></div></div>
+  </div>
+</div>
+</div>
+     <div class="col-lg-2">
+    <h2>TIMER</h2>
+    <h4 id="timerown">OPP: 60s</h4>
+    <h4 id="timeropponent">YOUR: 60s</h4>
+    </div>
+ </div>
+</div>
+{% endblock %}
+</body>

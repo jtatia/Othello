@@ -1,0 +1,49 @@
+{% extends 'main/base.html' %}
+{% load static %}
+{% block title %}Othello Game{% endblock %}
+    {% block head %}
+            <link rel="stylesheet" type="text/css" href="{% static 'main/css/styling.css'%}">
+    {% endblock %}
+{% block content%}
+    <header class="intro">
+    <h3 style="color: #FFFFFF">Welcome to the Othello Game</h3>
+<p style="color: #FFFFFF">
+Othello is played on an 8×8 board similar to that of chess. The two players each have 32 pieces, which are white on one side and black on the other. The game begins with each player having two pieces placed diagonally in the center of the board.
+</p>
+</header>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 col-lg-offset-4" style="padding-top: 400px">
+                <a href={% url 'main:newgame' %}><button id="but1" class="button">Create New Game</button></a>
+                <button id="but2" type="button" class="button" data-toggle="modal" data-target="#myModal">Join Game</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="myModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Enter Token No.</h4>
+      </div>
+      <div class="modal-body">
+          <form  action="{% url 'main:joingame' %}" method="post">
+              {% csrf_token %}
+              <div class="form-group">
+                <input type="number" class="form-control"  placeholder="Enter Token Number" name="token">
+              </div>
+              <div class="form-group">
+                  <input type="Submit" class="form-control" id="Submit" style="background-color:#ff2244;color: white" value="Submit">
+              </div>
+          </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+    </div>
+{% endblock %}
