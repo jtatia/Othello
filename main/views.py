@@ -61,7 +61,7 @@ def update_board(request):
     game = Game.objects.get(token=token)
     game.gameboard = board
     game.gameEnd=gameEnd
-    game.timer=61
+    game.timer=21
     game.turn=turn
     game.save()
     return HttpResponse('success')
@@ -76,7 +76,7 @@ def run(token):
     while True:
         game = Game.objects.get(token=token)
         if game.timer<=0:
-            game.timer=60
+            game.timer=20
             if game.turn==1:
                 game.turn=2
             else:
@@ -84,10 +84,10 @@ def run(token):
         game.timer=game.timer-1
         time.sleep(1)
         game1 = Game.objects.get(token=token)
-        if(game1.timer!=61):
+        if(game1.timer!=21):
             game.save()
         else:
-            game1.timer=59
+            game1.timer=19
             game1.save()
 
 def timer(token):

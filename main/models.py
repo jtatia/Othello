@@ -6,7 +6,7 @@ class Game(models.Model):
     count = models.IntegerField(default=0)
     turn = models.IntegerField(default=2)
     player = models.IntegerField(default=1)
-    timer = models.IntegerField(default=60)
+    timer = models.IntegerField(default=20)
     gameEnd = models.IntegerField(default=0)
 
     def __str__(self):

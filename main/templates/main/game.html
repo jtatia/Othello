@@ -80,7 +80,7 @@ var grid = [
   [0, 0, 0, 0, 0, 0, 0, 0]
 ];
 
-setInterval(function() {
+var x = setInterval(function() {
     var URL = "{% url 'main:refresh' %}";
     var data= {'token': {{ game.token }}};
 
@@ -88,24 +88,29 @@ setInterval(function() {
             b=response['gameboard'];
             turn=response['turn'];
             timer=response['timer'];
+            console.log(timer);
             endGame = response['gameEnd'];
             if (timer==61)
              timer=60;
             if (player==turn) {
-                document.getElementById("timeropponent").innerHTML = "OPP: 60s";
+                document.getElementById("timeropponent").innerHTML = "OPP: 20s";
                 document.getElementById("timerown").innerHTML = "YOUR: "+timer+"s";
             } else {
                 document.getElementById("timeropponent").innerHTML = "OPP: "+timer+"s";
-                document.getElementById("timerown").innerHTML = "YOUR: 60s";
+                document.getElementById("timerown").innerHTML = "YOUR: 20s";
             }
+            if(turn==1)
+                document.getElementById("colorTurn").innerHTML = "White Turn";
+            else
+                document.getElementById("colorTurn").innerHTML = "Black Turn";
             boardtogrid();
             refreshGrid();
 
             if(gameEnd()==0 && endGame==1 && resultdeclared==0){
            //     console.log("YESSS");
-                document.getElementById("timeropponent").innerHTML = "OPP: 60s";
+                document.getElementById("timeropponent").innerHTML = "OPP: 20s";
                 document.getElementById("colorTurn").innerHTML = "";
-                document.getElementById("timerown").innerHTML = "YOUR: 60s";
+                document.getElementById("timerown").innerHTML = "YOUR: 20s";
                 document.getElementById("winner").innerText = "Winner : "+(white>black?"white":"black");
                 gameend=1;
                 resultdeclared=1;
@@ -117,6 +122,7 @@ setInterval(function() {
                 else if (white==black)
                     alert("Draw!!!");
                 else alert("Sorry!! You Lost");
+                clearInterval(x);
             }
 
             if (player==turn){
@@ -176,10 +182,8 @@ console.log("TURN="+turn)
   if (turn==player && valid(row,col)) {
       if ((player == 1) && (grid[row][col] == 0)) {
           grid[row][col] = 1;
-          document.getElementById("colorTurn").innerHTML = "Black Turn";
       } else if ((player == 2) && (grid[row][col] == 0)) {
           grid[row][col] = 2;
-          document.getElementById("colorTurn").innerHTML = "White Turn";
       }
 
       //Complete the code here to flip existing disc following the rules of the game
@@ -214,72 +218,119 @@ function gameEnd() {
 
 function find(row,col) {
     var valid = 0;
+    var opposite =0;
+    if(player==1)
+        opposite=2;
+    else opposite=1;
+    var changed=0;
     for (var i=row+1;i<8;i++){
+        if(grid[i][col]==opposite)
+            changed=1;
         if (grid[i][col]==player) {
+            if(changed==1)
             return 1;
+            else break;
         }
         if (grid[i][col]==0)
             break;
     }
 
+    changed=0;
     for (var i=row-1;i>=0;i--){
+        if(grid[i][col]==opposite)
+            changed=1;
         if (grid[i][col]==player) {
+            if(changed==1)
             return 1;
+            else break;
         }
         if(grid[i][col]==0)
             break;
     }
 
+    changed=0;
     for (var i=col+1;i<8;i++){
+        if(grid[row][i]==opposite)
+            changed=1;
         if (grid[row][i]==player) {
-          return 1;
+          if(changed==1)
+            return 1;
+            else break;
         }
         if(grid[row][i]==0)
             break;
     }
 
 
+    changed=0;
     for (var i=col-1;i>=0;i--){
+        if(grid[row][i]==opposite)
+            changed=1;
         if (grid[row][i]==player) {
-       return 1;
+       if(changed==1)
+            return 1;
+            else break;
         }
         if(grid[row][i]==0)
             break;
     }
 
+    changed=0;
     var k=row+1,l=col+1;
     while (k<8 && l<8){
+        if(grid[k][l]==opposite)
+            changed=1;
         if (grid[k][l]==player){
-        return 1;
+        if(changed==1)
+            return 1;
+            else break;
         }
         if(grid[k][l]==0)
             break;
         k++;l++;
     }
 
+    changed=0;
     k=row-1,l=col-1;
     while (k>=0 && l>=0){
+         if(grid[k][l]==opposite)
+            changed=1;
         if (grid[k][l]==player){
-        return 1;
+        if(changed==1)
+            return 1;
+            else break;
         }
-        if(grid[k][l]==0)
+       if(grid[k][l]==0)
             break;
         k--;l--;
     }
+
+    changed=0;
     k=row+1,l=col-1;
     while (k<8 && l>=0){
+         if(grid[k][l]==opposite)
+            changed=1;
         if (grid[k][l]==player){
-        return 1;
+        if(changed==1)
+            return 1;
+            else break;
         }
+
         if(grid[k][l]==0)
             break;
         k++;l--;
     }
+    changed=0;
     k=row-1,l=col+1;
     while (k>=0 && l<8){
+         if(grid[k][l]==opposite)
+            changed=1;
         if (grid[k][l]==player){
-       return 1;
+        if(changed==1)
+            return 1;
+            else break;
         }
+
         if(grid[k][l]==0)
             break;
         k--;l++;
@@ -313,9 +364,9 @@ function valid(row,col) {
     else opposite=1;
     if(completeboardsamecolor()==0)
         return 0;
+
     for (var i=row+1;i<8;i++){
         if (grid[i][col]==turn) {
-            valid = 1;
             min=i;
             break;
         }
@@ -323,15 +374,16 @@ function valid(row,col) {
             break;
     }
     for(var i=row+1;i<min;i++){
-        console.log(i);
-        grid[i][col]=newval;
+        if(grid[i][col]==opposite) {
+            grid[i][col] = newval;
+            valid=1;
+        }
     }
 
     min=10;
 
     for (var i=row-1;i>=0;i--){
         if (grid[i][col]==turn) {
-            valid = 1;
             min=i;
             break;
         }
@@ -340,14 +392,15 @@ function valid(row,col) {
     }
 
      for(var i=row-1;i>min;i--){
-       console.log(i);
-        grid[i][col]=newval;
+        if(grid[i][col]==opposite) {
+            grid[i][col] = newval;
+            valid=1;
+        }
     }
     min=-1;
 
     for (var i=col+1;i<8;i++){
         if (grid[row][i]==turn) {
-            valid = 1;
             min=i;
             break;
         }
@@ -356,15 +409,16 @@ function valid(row,col) {
     }
 
     for(var i=col+1;i<min;i++){
-        console.log(i);
-        grid[row][i]=newval;
+        if(grid[row][i]==opposite) {
+            grid[row][i] = newval;
+            valid=1;
+        }
     }
 
     min=10;
 
     for (var i=col-1;i>=0;i--){
         if (grid[row][i]==turn) {
-            valid = 1;
             min=i;
             break;
         }
@@ -373,15 +427,16 @@ function valid(row,col) {
     }
 
     for(var i=col-1;i>min;i--){
-console.log(i);
-        grid[row][i]=newval;
+        if(grid[row][i]==opposite) {
+            grid[row][i] = newval;
+            valid=1;
+        }
     }
 
     var k=row+1,l=col+1;
     var rmin=-1,colmin=-1;
     while (k<8 && l<8){
         if (grid[k][l]==turn){
-            valid=1;
             rmin=k;colmin=l;
             break;
         }
@@ -392,8 +447,10 @@ console.log(i);
 
     var m=row+1,n=col+1;
     while (m<rmin && n<colmin){
-        console.log(m);console.log(n);
-        grid[m][n]=newval;
+        if(grid[m][n]==opposite) {
+            valid=1;
+        }
+        grid[m][n] = newval;
         m++;n++;
     }
 
@@ -402,7 +459,6 @@ console.log(i);
     rmin=10,colmin=10;
     while (k>=0 && l>=0){
         if (grid[k][l]==turn){
-            valid=1;
             rmin=k;colmin=l;
             break;
         }
@@ -412,8 +468,10 @@ console.log(i);
     }
 
     while (m>rmin && n>colmin){
-        console.log(m);console.log(n);
-        grid[m][n]=newval;
+        if(grid[m][n]==opposite) {
+            grid[m][n] = newval;
+            valid=1;
+        }
         m--;n--;
     }
 
@@ -423,7 +481,6 @@ console.log(i);
     k=row+1,l=col-1;
     while (k<8 && l>=0){
         if (grid[k][l]==turn){
-            valid=1;
             rmin=k;colmin=l;
             break;
         }
@@ -433,21 +490,19 @@ console.log(i);
     }
 
     while (m<rmin && n>colmin){
-       console.log(m);console.log(n);
-
-        grid[m][n]=newval;
+          if(grid[m][n]==opposite) {
+            grid[m][n] = newval;
+            valid=1;
+        }
         m++;n--;
     }
 
 
     m=row-1,n=col+1;
-    rmin=10,col=-1;
+    rmin=10,colmin=-1;
     k=row-1,l=col+1;
-    console.log(m);
-    console.log(n);console.log(rmin);console.log(colmin);
     while (k>=0 && l<8){
         if (grid[k][l]==turn){
-            valid=1;
             rmin=k;colmin=l;
             break;
         }
@@ -457,9 +512,10 @@ console.log(i);
     }
 
     while (m>rmin && n<colmin){
-        console.log(m);console.log(n);
-
-        grid[m][n]=newval;
+            if(grid[m][n]==opposite) {
+            grid[m][n] = newval;
+            valid=1;
+        }
         m--;n++;
     }
 
@@ -517,6 +573,7 @@ grid = [
 <body>
 {% block content %}
 <H1>OTHELLO Challenge</H1>
+    <h4 align="left">Token: {{ game.token }}</h4>
 <div id="colorTurn">Turn: {{ game.player }}</div>
     <h2 id="winner"></h2>
  <div class="container-fluid">
@@ -612,8 +669,8 @@ grid = [
 </div>
      <div class="col-lg-2">
     <h2>TIMER</h2>
-    <h4 id="timerown">OPP: 60s</h4>
-    <h4 id="timeropponent">YOUR: 60s</h4>
+    <h4 id="timerown">OPP: 20s</h4>
+    <h4 id="timeropponent">YOUR: 20s</h4>
     </div>
  </div>
 </div>
